@@ -1,0 +1,30 @@
+package com.wazbus.stationservice.configuration;
+
+import com.mongodb.reactivestreams.client.MongoClient;
+import com.mongodb.reactivestreams.client.MongoClients;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.config.AbstractReactiveMongoConfiguration;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
+
+@Configuration
+@EnableReactiveMongoRepositories(basePackages = "com.wazbus.stationservice.repository")
+public class MongoDBConfiguration extends AbstractReactiveMongoConfiguration {
+
+    @Override
+    protected String getDatabaseName() {
+        return "wazdb";
+    }
+
+    @Override
+    @Bean
+    public MongoClient reactiveMongoClient() {
+        return MongoClients.create("mongodb://localhost:27017");
+    }
+
+    @Bean
+    public ReactiveMongoTemplate reactiveMongoTemplate() {
+        return new ReactiveMongoTemplate(reactiveMongoClient(), getDatabaseName());
+    }
+}
