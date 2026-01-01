@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 @RestController
-@RequestMapping(value = "/v1/admin/stations")
+@RequestMapping(value = "/api/v1/admin/stations")
 public class StationAdminController {
 
     private static final Logger logger = LoggerFactory.getLogger(StationAdminController.class);
@@ -31,9 +31,4 @@ public class StationAdminController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<?> getStationById(@PathVariable("id") String id) {
-        logger.info("Getting station");
-        return ResponseEntity.ok().body(id);
-    }
 }

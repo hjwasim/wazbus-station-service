@@ -7,6 +7,9 @@ import com.wazbus.stationservice.enums.EntityCodePrefix;
 import com.wazbus.stationservice.repository.StationRepository;
 import com.wazbus.stationservice.utils.CodeSeqGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.ReactiveMongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -15,24 +18,50 @@ public class StationAdminService {
 
     private final StationRepository stationRepository;
     private final CodeSeqGenerator codeSeqGenerator;
+    private final ReactiveMongoTemplate reactiveMongoTemplate;
 
     @Autowired
-    public StationAdminService(StationRepository stationRepository, CodeSeqGenerator codeSeqGenerator) {
+    public StationAdminService(StationRepository stationRepository,
+                               CodeSeqGenerator codeSeqGenerator,
+                               ReactiveMongoTemplate reactiveMongoTemplate) {
         this.stationRepository = stationRepository;
         this.codeSeqGenerator = codeSeqGenerator;
+        this.reactiveMongoTemplate = reactiveMongoTemplate;
     }
 
     public Mono<StationCreatedResponse> createStation(StationCreateRequest stationCreateRequest) {
         String stationName = stationCreateRequest.getName();
-        String stationCode = codeSeqGenerator.generate(EntityCodePrefix.STATION, stationName);
+        String city = stationCreateRequest.getCity();
+        String country = stationCreateRequest.getCountry();
 
-        Station station = new Station();
-        station.setName(stationName);
-        station.setCode(stationCode);
-        station.setCity(stationCreateRequest.getCity());
-        station.setCountry(stationCreateRequest.getCountry());
+        Criteria nameCriteria = Criteria.where("name").is(stationName);
+        Criteria cityCriteria = Criteria.where("city").is(city);
+        Criteria combinedCriteria = new Criteria().andOperator(nameCriteria, cityCriteria);
 
-        return stationRepository.save(station)
-                .map(savedStation -> new StationCreatedResponse(savedStation.getCode(), savedStation.getName()));
+        Query query = new Query().addCriteria(combinedCriteria);
+
+        return reactiveMongoTemplate.exists(query, Station.class)
+                .flatMap(found -> {
+                    if (found) {
+                        return Mono.error(new RuntimeException("Station already exists"));
+                    }
+
+                    String stationCode =
+                            codeSeqGenerator.generate(EntityCodePrefix.STATION, stationName);
+
+                    Station station = new Station();
+                    station.setName(stationName);
+                    station.setCity(city);
+                    station.setCountry(country);
+                    station.setCode(stationCode);
+
+                    return stationRepository.save(station)
+                            .map(saved ->
+                                    new StationCreatedResponse(
+                                            saved.getCode(),
+                                            saved.getName()
+                                    )
+                            );
+                });
     }
 }
