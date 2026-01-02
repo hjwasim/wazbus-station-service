@@ -10,4 +10,7 @@ import lombok.Setter;
 public class StationResponse {
     private String code;
     private String name;
+    private String city;
+    private String country;
+
 }

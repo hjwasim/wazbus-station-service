@@ -2,6 +2,8 @@ package com.wazbus.stationservice.controllers.admin;
 
 import com.wazbus.stationservice.dto.StationCreateRequest;
 import com.wazbus.stationservice.dto.StationCreatedResponse;
+import com.wazbus.stationservice.dto.StationUpdateRequest;
+import com.wazbus.stationservice.dto.StationUpdatedResponse;
 import com.wazbus.stationservice.services.StationAdminService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
@@ -29,6 +31,26 @@ public class StationAdminController {
             @Valid @RequestBody StationCreateRequest stationCreateRequest) {
         Mono<StationCreatedResponse> response = stationAdminService.createStation(stationCreateRequest);
         return ResponseEntity.ok(response);
+    }
+
+    @PutMapping
+    public ResponseEntity<Mono<StationUpdatedResponse>> updateStation(
+            @Valid @RequestBody StationUpdateRequest stationUpdateRequest) {
+        Mono<StationUpdatedResponse> response = stationAdminService.updateStation(stationUpdateRequest);
+        return ResponseEntity.ok(response);
+    }
+
+    @DeleteMapping
+    public Mono<ResponseEntity<Void>> deleteStation(@RequestParam String code) {
+        return stationAdminService.deleteStation(code)
+                .map(deleted -> {
+                    if (deleted) {
+                        logger.info("Deleted station with code {}", code);
+                        return ResponseEntity.noContent().build();
+                    }
+                    logger.info("Station Not Found with code {}", code);
+                    return ResponseEntity.notFound().build();
+                });
     }
 
 }

@@ -6,8 +6,11 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@AllArgsConstructor
-public class StationCreatedResponse {
-    private String code;
-    private String name;
+public class StationCreatedResponse extends StationResponse {
+
+    private boolean isSuccess;
+
+    public StationCreatedResponse(String code, String name, String city, String country) {
+        super(code, name, city, country);
+    }
 }

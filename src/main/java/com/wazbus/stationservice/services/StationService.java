@@ -26,7 +26,11 @@ public class StationService {
 
     public Flux<StationResponse> fetchAllStations() {
         return stationRepository.findAll().map(station -> {
-            return new StationResponse(station.getCode(), station.getName());
+            return new StationResponse(station.getCode(),
+                    station.getName(),
+                    station.getCity(),
+                    station.getCountry()
+            );
         });
     }
 
@@ -36,7 +40,11 @@ public class StationService {
 
         return reactiveMongoTemplate.findOne(query, Station.class)
                 .map(station ->
-                        new StationResponse(station.getCode(), station.getName())
+                        new StationResponse(station.getCode(),
+                                station.getName(),
+                                station.getCity(),
+                                station.getCountry()
+                        )
                 )
                 .switchIfEmpty(Mono.error(new RuntimeException("Station not found")));
 
